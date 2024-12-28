@@ -1,8 +1,11 @@
+use chrono::TimeZone;
+use influxdb::InfluxDbWriteable;
 use serde::Deserialize;
 use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct Resource {
     name: String,
     pub resource_id: String,
@@ -11,6 +14,7 @@ pub struct Resource {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct Entity {
     application_id: String,
     postal_code: String,
@@ -29,12 +33,13 @@ pub struct Entity {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 pub struct Reading {
     status: String,
     name: String,
     resource_type_id: String,
     resource_id: String,
-    query: Query,
+    query: ResourceQuery,
     data: Vec<Vec<f64>>,
     units: String,
     classifier: String,
@@ -42,9 +47,33 @@ pub struct Reading {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct Query {
+pub struct ResourceQuery {
     pub from: String,
     pub to: String,
     pub period: String,
     pub function: String,
+}
+
+#[derive(InfluxDbWriteable, Clone, Default)]
+pub struct InfluxValue {
+    time: chrono::DateTime<chrono::Utc>,
+    value: f64,
+    #[influxdb(tag)]
+    classifier: String,
+    #[influxdb(tag)]
+    measurement: String,
+}
+
+impl Reading {
+    pub fn to_influx(&self) -> Vec<InfluxValue> {
+        self.data
+            .iter()
+            .map(|v| InfluxValue {
+                time: chrono::Utc.timestamp_opt(v[0] as i64, 0).unwrap(),
+                value: v[1],
+                classifier: self.classifier.clone(),
+                measurement: self.classifier.clone(),
+            })
+            .collect::<Vec<InfluxValue>>()
+    }
 }
