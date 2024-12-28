@@ -270,10 +270,10 @@ async fn get_readings_for_resource(
     let response = client
         .get(url.clone())
         .query(&[
-            ("from", query.from.clone()),
-            ("to", query.to.clone()),
-            ("period", query.period.clone()),
-            ("function", query.function.clone()),
+            ("from", &query.from),
+            ("to", &query.to),
+            ("period", &query.period),
+            ("function", &query.function),
         ])
         .send()
         .await?;
