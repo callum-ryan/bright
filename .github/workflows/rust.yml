@@ -7,11 +7,6 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-defaults:
-  run:
-    # necessary for windows
-    shell: bash
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -24,8 +19,6 @@ jobs:
             ~/.cargo/registry
             ./target
           key: test-cargo-registry
-      - name: List
-        run: find ./
       - name: Run tests
         run: cargo test --verbose
 
@@ -90,17 +83,10 @@ jobs:
         run: rustup target add $TARGET
       - name: Run build
         run: cargo build --release --verbose --target $TARGET
-      - name: List target
-        run: find ./target
       - name: Compress
         run: |
           mkdir -p ./artifacts
-          # windows is the only OS using a different convention for executable file name
-          if [[ $OS =~ ^windows.*$ ]]; then
-              EXEC=$NAME.exe
-          else
-              EXEC=$NAME
-          fi
+          EXEC=$NAME
           if [[ $GITHUB_REF_TYPE =~ ^tag$ ]]; then
             TAG=$GITHUB_REF_NAME
           else
@@ -111,7 +97,7 @@ jobs:
       - name: Archive artifact
         uses: actions/upload-artifact@v4
         with:
-          name: result
+          name: ${{ matrix.TARGET }}
           path: |
             ./artifacts
 
@@ -124,10 +110,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: result
           path: ./artifacts
-      - name: List
-        run: find ./artifacts
+          merge-multiple: 'true'
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
