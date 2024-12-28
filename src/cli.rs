@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
-use clap::builder::StringValueParser;
-use clap::builder::TypedValueParser;
+use clap::builder::{StringValueParser, TypedValueParser};
 use clap::Parser;
 
 #[derive(Parser, Debug)]

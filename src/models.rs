@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use chrono::TimeZone;
 use influxdb::InfluxDbWriteable;
 use serde::Deserialize;
-use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]

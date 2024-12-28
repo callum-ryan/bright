@@ -1,17 +1,18 @@
-use clap::Parser;
-use log::debug;
-use reqwest::header;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use clap::Parser;
+use log::debug;
+use reqwest::header;
 mod cli;
 mod models;
-use crate::cli::Cli;
-use crate::models::{Entity, Reading, ResourceQuery};
+use chrono::{DateTime, Local, TimeZone};
 use influxdb::InfluxDbWriteable;
 
-use chrono::{DateTime, Local, TimeZone};
+use crate::cli::Cli;
+use crate::models::{Entity, Reading, ResourceQuery};
 
 const GLOWMARKT_AUTH_URI: &str = "https://api.glowmarkt.com/api/v0-1/auth";
 const GLOWMARKT_APP_ID: &str = "b0f1b774-a586-4f72-9edd-27ead8aa7a8d";
@@ -72,12 +73,10 @@ async fn main() {
 fn min_dates<Tz: TimeZone>(d1: DateTime<Tz>, d2: DateTime<Tz>) -> DateTime<Tz> {
     let d1_unix = d1.timestamp();
     let d2_unix = d2.timestamp();
-    if d1_unix < d2_unix {
-        d1
-    } else if d1_unix > d2_unix {
-        d2
-    } else {
-        d1
+    match d1_unix.cmp(&d2_unix) {
+        std::cmp::Ordering::Less => d1,
+        std::cmp::Ordering::Greater => d2,
+        std::cmp::Ordering::Equal => d1,
     }
 }
 
