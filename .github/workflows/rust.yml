@@ -16,9 +16,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -33,38 +33,29 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # a list of all the targets
         include:
-          - TARGET: x86_64-unknown-linux-gnu # tested in a debian container on a mac
+          - TARGET: x86_64-unknown-linux-gnu
             OS: ubuntu-latest
-          - TARGET: x86_64-unknown-linux-musl # test in an alpine container on a mac
+          - TARGET: x86_64-unknown-linux-musl
             OS: ubuntu-latest
-          - TARGET: aarch64-unknown-linux-gnu # tested on aws t4g.nano
+          - TARGET: aarch64-unknown-linux-gnu
             OS: ubuntu-latest
-          - TARGET: aarch64-unknown-linux-musl # tested on aws t4g.nano in alpine container
+          - TARGET: aarch64-unknown-linux-musl
             OS: ubuntu-latest
-          - TARGET: armv7-unknown-linux-gnueabihf # raspberry pi 2-3-4, not tested
+          - TARGET: armv7-unknown-linux-gnueabihf
             OS: ubuntu-latest
-          - TARGET: armv7-unknown-linux-musleabihf # raspberry pi 2-3-4, not tested
+          - TARGET: armv7-unknown-linux-musleabihf
             OS: ubuntu-latest
-          - TARGET: arm-unknown-linux-gnueabihf # raspberry pi 0-1, not tested
-            OS: ubuntu-latest
-          - TARGET: arm-unknown-linux-musleabihf # raspberry pi 0-1, not tested
-            OS: ubuntu-latest
-          - TARGET: x86_64-apple-darwin # tested on a mac, is not properly signed so there are security warnings
-            OS: macos-latest
-          - TARGET: x86_64-pc-windows-msvc # tested on a windows machine
-            OS: windows-latest
     needs: test
     runs-on: ${{ matrix.OS }}
     env:
-      NAME: rust-cross-compile-example # change with the name of your project
+      NAME: bright
       TARGET: ${{ matrix.TARGET }}
       OS: ${{ matrix.OS }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cargo cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
@@ -131,13 +122,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: result
           path: ./artifacts
       - name: List
         run: find ./artifacts
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: ./artifacts/*.tar.gz
