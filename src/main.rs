@@ -4,7 +4,8 @@ use std::io::Write;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use clap::Parser;
-use log::debug;
+use log::{debug, info};
+use models::GetReadingsError;
 use reqwest::header;
 mod cli;
 mod models;
@@ -32,20 +33,36 @@ async fn main() {
 
     let mut batches = Vec::new();
 
-    if (cli.end_date - cli.start_date).num_days() > 10 {
+    let (start, end) = match (cli.start_date, cli.end_date) {
+        (Some(start), Some(end)) => (start, end),
+        (None, None) => {
+            let now = Local::now();
+            (
+                (now - chrono::Duration::days(10))
+                    .with_time(chrono::NaiveTime::MIN)
+                    .unwrap(),
+                now,
+            )
+        }
+        _ => panic!("Either both dates must be provided, or neither."),
+    };
+
+    info!("requesting data from GlowMarkt for {:?} - {:?}", start, end);
+
+    if (end - start).num_days() > 10 {
         debug!("requested more than 10 days of data, chunking requests");
-        let mut start_date = cli.start_date;
-        let mut end_date = cli.start_date + chrono::Duration::days(10);
+        let mut start_date = start;
+        let mut end_date = start + chrono::Duration::days(10);
 
         batches.push((start_date, end_date));
 
-        while end_date < cli.end_date {
+        while end_date < end {
             start_date += chrono::Duration::days(10);
-            end_date = min_dates(start_date + chrono::Duration::days(10), cli.end_date);
+            end_date = min_dates(start_date + chrono::Duration::days(10), end);
             batches.push((start_date, end_date));
         }
     } else {
-        batches.push((cli.start_date, cli.end_date));
+        batches.push((start, end));
     }
 
     let readings = if let Ok(entities) = get_entities(&client).await {
@@ -248,19 +265,25 @@ async fn get_readings_for_resource(
     client: &reqwest::Client,
     resource_id: &str,
     query: ResourceQuery,
-) -> Result<Reading, reqwest::Error> {
+) -> Result<Reading, GetReadingsError> {
     let url = format!("https://api.glowmarkt.com/api/v0-1/resource/{resource_id}/readings?");
     let response = client
-        .get(url)
+        .get(url.clone())
         .query(&[
-            ("from", query.from),
-            ("to", query.to),
-            ("period", query.period),
-            ("function", query.function),
+            ("from", query.from.clone()),
+            ("to", query.to.clone()),
+            ("period", query.period.clone()),
+            ("function", query.function.clone()),
         ])
         .send()
         .await?;
 
-    let readings = response.json::<Reading>().await?;
+    let response_text = response.text().await?;
+    debug!(
+        "raw response for {} and query {:?}: {:?}",
+        &url, &query, response_text
+    );
+
+    let readings = serde_json::from_str::<Reading>(&response_text)?;
     Ok(readings)
 }

@@ -46,7 +46,7 @@ pub struct Reading {
     classifier: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ResourceQuery {
     pub from: String,
@@ -77,4 +77,14 @@ impl Reading {
             })
             .collect::<Vec<InfluxValue>>()
     }
+}
+
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum GetReadingsError {
+    #[error("Request failed: {0}")]
+    Request(#[from] reqwest::Error),
+    #[error("Failed to parse response JSON: {0}")]
+    Parse(#[from] serde_json::Error),
 }

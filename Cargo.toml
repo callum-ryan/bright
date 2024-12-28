@@ -13,6 +13,7 @@ log = "0.4.22"
 reqwest = { version = "0.12.11", features = ["json"] }
 serde = { version = "1.0.217", features = ["serde_derive"] }
 serde_json = "1.0.134"
+thiserror = "2.0.9"
 tokio = { version = "1.42.0", features = ["macros", "rt", "rt-multi-thread"] }
 
 [dependencies.openssl-sys]

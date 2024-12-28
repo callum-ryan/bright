@@ -6,9 +6,9 @@ use clap::Parser;
 #[command(about = "Pull data from Bright/GlowMarkt API")]
 pub struct Cli {
     #[arg(value_parser = StringValueParser::new().try_map(parse_dt))]
-    pub start_date: DateTime<Local>,
+    pub start_date: Option<DateTime<Local>>,
     #[arg(value_parser = StringValueParser::new().try_map(parse_dt))]
-    pub end_date: DateTime<Local>,
+    pub end_date: Option<DateTime<Local>>,
     #[clap(env)]
     pub gm_username: String,
     #[clap(env)]
