@@ -7,6 +7,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  PACKAGE_NAME: bright
 
 jobs:
   build:
@@ -17,24 +18,19 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact_name: pq-rs
-            asset_name: pq-rs-linux-x86_64.tar.gz
+            asset_name: linux-x86_64.tar.gz
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
-            artifact_name: pq-rs
-            asset_name: pq-rs-linux-aarch64.tar.gz
+            asset_name: -linux-aarch64.tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact_name: pq-rs.exe
-            asset_name: pq-rs-windows-x86_64.tar.gz
+            asset_name: -windows-x86_64.tar.gz
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact_name: pq-rs
-            asset_name: pq-rs-macos-x86_64.tar.gz
+            asset_name: -macos-x86_64.tar.gz
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact_name: pq-rs
-            asset_name: pq-rs-macos-aarch64.tar.gz
+            asset_name: -macos-aarch64.tar.gz
 
     steps:
     - uses: actions/checkout@v4
@@ -67,19 +63,19 @@ jobs:
       if: runner.os != 'Windows'
       run: |
         cd target/${{ matrix.target }}/release
-        tar -czf ../../../${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+        tar -czf ../../../${{ env.PACKAGE_NAME }}${{ matrix.asset_name }} ${{ env.PACKAGE_NAME }}
     
     - name: Create archive (Windows)
       if: runner.os == 'Windows'
       run: |
         cd target/${{ matrix.target }}/release
-        tar -czf ../../../${{ matrix.asset_name }} ${{ matrix.artifact_name }}
+        tar -czf ../../../${{ env.PACKAGE_NAME }}${{ matrix.asset_name }} ${{ env.PACKAGE_NAME }}.exe
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.asset_name }}
-        path: ${{ matrix.asset_name }}
+        name: ${{ env.PACKAGE_NAME }}${{ matrix.asset_name }}
+        path: ${{ env.PACKAGE_NAME }}${{ matrix.asset_name }}
 
   upload-assets:
     name: Upload Release Assets
